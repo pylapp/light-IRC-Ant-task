@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/svn/!svn/ver/3/trunk/src/pylapp/liat/tests
+END
+package-info.java
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/3/trunk/src/pylapp/liat/tests/package-info.java
+END
+Test_MIrcFacade.java
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/3/trunk/src/pylapp/liat/tests/Test_MIrcFacade.java
+END
+Test_LIrcAntTask.java
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/3/trunk/src/pylapp/liat/tests/Test_LIrcAntTask.java
+END

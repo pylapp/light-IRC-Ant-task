@@ -1,0 +1,503 @@
+package pylapp.liat.ant;
+
+/*
+ * Copyright © (C) 2013, Pierre-Yves Lapersonne
+ *
+ * Contact: Pierre-Yves Lapersonne <pierreyveslapersonne(at)gmail(dot)com>
+ *	 
+ * This file is part of LIAT (Little Irc Ant Task) Project
+ *
+ * LIAT is free software: you can redistribute it and/or modify it under the terms of 
+ * the GNU General Public License as published by the Free Software Foundation, either version 3 
+ * of the License, or (at your option) any later version.
+ *	
+ * LIAT is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * See the GNU General Public License for more details.
+ *	
+ * You should have received a copy of the GNU General Public License along 
+ * with this program; if not, write to the Free Software Foundation, Inc., 
+ * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+ 
+import org.apache.tools.ant.Task;
+
+import pylapp.liat.exceptions.BadInitializationException;
+import pylapp.liat.irc.IrcFacade;
+import pylapp.liat.irc.MIrcFacade;
+import pylapp.liat.irc.MIrcFacade.States;
+import pylapp.liat.utils.MessagesDisplayer;
+
+/**
+ * <b>Class to use as an Ant task for using IRC stuff.</b>
+ * <br />
+ * This is the class to call so as to use IRC protocol. It is built with the tutorial available on 
+ * <em>http://ant.apache.org/manual/develop.html</em>. The IRC API is an external tool developed
+ * by <b>Miguel Lebane</b> (miguel (at) lebane (dot) se).
+ * 
+ * <br />
+ * The Ant task to call for using IRC features is like that :
+ * <br /><br />
+ * <pi>
+ *		<taskdef name="irc" classname="pylapp.liat.ant.LIrcAntTask"/>
+ *		<irc 
+ *			hostname="irc.myserver.org"
+ *			servicePort="6667"
+ *			isSSLServer="true"
+ *			channel="#channel"
+ *			nickname="irc nickname"
+ *			alternativeNickname1="first choice alternative nick"
+ *			alternativeNickname2="second choice alternative nick"
+ *			alternativeNickname3="third choice alternative nick"
+ *			realName="irc real name"
+ *			ident="irc ident"
+ *			message="the message to send"
+ *			/>
+ * </pre>
+ * <br /><br />
+ * 
+ * Mainly it should be like the following example :<br />
+ * <pre>
+ *		<taskdef name="irc" classname="pylapp.liat.ant.LIrcAntTask"/>
+ *		<irc 
+ *			hostname="irc.quakenet.eu.org"
+ *			servicePort="6667"
+ *			isSSLServer="true"
+ *			channel="#myOwnProjectChannel"
+ *			nickname="jd"
+ *			alternativeNickname1="jd1"
+ *			alternativeNickname2="jd2"
+ *			alternativeNickname3="jd3"
+ *			realName="John Doe"
+ *			message="Hello World !"
+ *			/>
+ * </pre>
+ * 
+ * 
+ * @author Pylapp ((at)pylapp on Twitter)
+ * @version 1.0.0
+ * @see org.apache.tools.ant.Task
+ * @since 07/06/2013
+ */
+public class LIrcAntTask extends Task {
+
+	
+	// ATTRIBUTES
+	
+	/**
+	 * The IRC host as a name
+	 */
+	private String hostName;
+	/**
+	 * The IRC host as an IPv4 address
+	 */
+	private String hostIpv4;
+	/**
+	 * The port to use on the IRC host (between 6660 and 6669, mainly 6667)
+	 */
+	private int servicePort;
+	/**
+	 * If the server to use supports SSL
+	 */
+	private boolean isSSLserver;
+	
+	/**
+	 * The channel to use (like #aChannel)
+	 */
+	private String channel;
+	
+	/**
+	 * The nickname to use (mainly <= 9 characters)
+	 */
+	private String nickname;
+	/**
+	 * First alternative nickname
+	 */
+	private String alternativeNickname1;
+	/**
+	 * Second alternative nickname
+	 */
+	private String alternativeNickname2;
+	/**
+	 * Third alternative nickname
+	 */
+	private String alternativeNickname3;
+	/**
+	 * The IRC real name. Used sometimes by IRC, called for the registration
+	 */
+	private String realName;
+	/**
+	 * The IRC ident. Used within the full string like "~yourident@hostfoo.bar"
+	 */
+	private String ident;
+	
+	/**
+	 * The message
+	 */
+	private String message;
+	
+	
+	// CONSTANTS
+
+	/**
+	 * Default value for the host name
+	 */
+	public static final String DEFAULT_HOST;
+	/**
+	 * Default value for the host IPv4 address
+	 */
+	public static final String DEFAULT_V4ADDRESS;
+	/**
+	 * Default value for the channel
+	 */
+	public static final String DEFAULT_CHANNEL;
+	/**
+	 * Default value for the SSL support
+	 */
+	public static final boolean DEFAULT_SSL_SUPPORT;
+	/**
+	 * Default value for the nickname
+	 */
+	public static final String DEFAULT_NICK;
+	/**
+	 * Default value for the 1st alternative nickname
+	 */
+	public static final String DEFAULT_ALTER_NICK_1;
+	/**
+	 * Default value for the 2nd alternative nickname
+	 */
+	public static final String DEFAULT_ALTER_NICK_2;
+	/**
+	 * Default value for the 3rd alternative nickname
+	 */
+	public static final String DEFAULT_ALTER_NICK_3;
+	/**
+	 * Default value for the real name
+	 */
+	public static final String DEFAULT_REAL_NAME;
+	/**
+	 * Default value for the ident
+	 */
+	public static final String DEFAULT_IDENT;
+	/**
+	 * Default value for the message
+	 */
+	public static final String DEFAULT_MESSAGE;
+	/**
+	 * The default port to use
+	 */
+	public static final int DEFAULT_PORT;
+
+	static { 
+		DEFAULT_CHANNEL       = "#lircanttask";
+		DEFAULT_HOST          = "localhost";
+		DEFAULT_SSL_SUPPORT   = false;
+		DEFAULT_MESSAGE       = "Hello World !";
+		DEFAULT_NICK          = "<anon>";
+		DEFAULT_ALTER_NICK_1  = "<anon1>";
+		DEFAULT_ALTER_NICK_2  = "<anon2>";
+		DEFAULT_ALTER_NICK_3  = "<anon3>";
+		DEFAULT_REAL_NAME     = "<anon>";
+		DEFAULT_IDENT         = "<anon>";
+		DEFAULT_V4ADDRESS     = "<undef>";
+		DEFAULT_PORT          = 6667;
+	}
+	
+	/*
+	 * Build info
+	 */
+	
+	public static final String LIAT_VERSION = "0.1.0";	
+	
+	
+	// CONSTRUCTORS
+	
+	/**
+	 * Default constructor
+	 */
+	public LIrcAntTask(){
+		super();
+		hostName    = DEFAULT_HOST;
+		isSSLserver = DEFAULT_SSL_SUPPORT;
+		hostIpv4    = DEFAULT_V4ADDRESS;
+		servicePort = DEFAULT_PORT;
+		channel     = DEFAULT_CHANNEL;
+		nickname    = DEFAULT_NICK;
+		realName    = DEFAULT_REAL_NAME;
+		ident       = DEFAULT_IDENT;
+		alternativeNickname1 = DEFAULT_ALTER_NICK_1;
+		alternativeNickname2 = DEFAULT_ALTER_NICK_2;
+		alternativeNickname3 = DEFAULT_ALTER_NICK_3;
+		message     = DEFAULT_MESSAGE;
+	}
+
+	/**
+	 * Constructor
+	 * 
+	 * @param hostName - The host name
+	 * @param hostIpv4 - The host address
+	 * @param servicePort - The port to use
+	 * @param isSSLserver - If the server supports SSL
+	 * @throws BadInitializationException   - If hostname AND hostIpv4 are null
+	 */
+	public LIrcAntTask( String hostName, String hostIpv4, int servicePort, boolean isSSLserver ) throws BadInitializationException {
+		super();
+		if ( "".equals(hostName) && "".equals(hostIpv4) )
+			throw new BadInitializationException("The _hostname_ and the _histIpv4_ must not be null at the same time");
+		this.hostName    = hostName;
+		this.isSSLserver = isSSLserver;
+		this.hostIpv4    = hostIpv4;
+		this.servicePort = servicePort;
+		channel     = DEFAULT_CHANNEL;
+		nickname    = DEFAULT_NICK;
+		realName    = DEFAULT_REAL_NAME;
+		ident       = DEFAULT_IDENT;
+		message     = DEFAULT_MESSAGE;
+		alternativeNickname1 = DEFAULT_ALTER_NICK_1;
+		alternativeNickname2 = DEFAULT_ALTER_NICK_2;
+		alternativeNickname3 = DEFAULT_ALTER_NICK_3;
+	}
+	
+	// METHODS
+	
+	/**
+	 * The execution procedure of the Ant {@link org.apache.tools.ant.Task}.
+	 * Will make the connection in another {@link java.lang.Thread} so as to make the task waiting for the connection callback.
+	 */
+	@Override
+	public void execute(){
+		
+		try {
+			
+			final IrcFacade irc = new MIrcFacade();
+			((MIrcFacade)irc).setConfigBundle(this);
+			MessagesDisplayer.displayOut("[liat] Try with config. : " + toString() + "\n");
+			
+			// Launch in a new thread for handling in several sides the connection callback and the main thread (i.e the task)
+			new Thread( new Runnable(){
+				@Override
+				public void run() {
+					irc.connectToHost();
+				}
+			}).start();
+		
+			while( ((MIrcFacade)irc).getState() != States.DONE ){
+				if ( System.currentTimeMillis() % 100000 == 0 ) MessagesDisplayer.displayOut("");
+			}
+			
+		} catch ( Exception e ){
+			MessagesDisplayer.displayErr("[liat] Erreur : " + e.getMessage() + "\n" );
+			e.printStackTrace();
+		}
+		
+	}
+	
+	/**
+	 * @return String - A String description of the object
+	 */
+	@Override
+	public String toString(){
+		StringBuffer sb = new StringBuffer();
+		sb.append("LIrcAntTask :");
+		sb.append("\n\tVersion.........: ");
+		sb.append(LIAT_VERSION);
+		sb.append("\n\tHost............: ");
+		sb.append(hostName);
+		sb.append("\n\t@IPv4...........: ");
+		sb.append(hostIpv4);
+		sb.append("\n\tPort............: ");
+		sb.append(servicePort);
+		sb.append("\n\tSSL server......: ");
+		sb.append(isSSLserver);
+		sb.append("\n\tChannel.........: ");
+		sb.append(channel);
+		sb.append("\n\tNickname........: ");
+		sb.append(nickname);
+		sb.append("\n\tReal name.......: ");
+		sb.append(realName);
+		sb.append("\n\tIdent...........: ");
+		sb.append(ident);
+		sb.append("\n\tAlt. nick. 1....: ");
+		sb.append(alternativeNickname1);
+		sb.append("\n\tAlt. nick. 2....: ");
+		sb.append(alternativeNickname2);
+		sb.append("\n\tAlt. nick. 3....: ");
+		sb.append(alternativeNickname3);
+		sb.append("\n\tMessage.........: ");
+		sb.append(message);
+		sb.append("\n");
+		return sb.toString();
+	}
+	
+	
+	// GETTERS AND SETTERS
+	
+	/**
+	 * @return String - The host name
+	 */
+	public String getHostName(){
+		return hostName;
+	}
+
+	/**
+	 * @param hostName - The host name
+	 */
+	public void setHostName( String hostName ){
+		this.hostName = hostName;
+	}
+
+	/**
+	 * @return String - The IPv4 address of the host
+	 */
+	public String getHostIpv4(){
+		return hostIpv4;
+	}
+
+	/**
+	 * @param hostIpv4 - The IPv4 address of the host
+	 */
+	public void setHostIpv4( String hostIpv4 ){
+		this.hostIpv4 = hostIpv4;
+	}
+
+	/**
+	 * @return int - The port to use
+	 */
+	public int getServicePort(){
+		return servicePort;
+	}
+
+	/**
+	 * @param servicePort - The port to use
+	 */
+	public void setServicePort( int servicePort ){
+		this.servicePort = servicePort;
+	}
+
+	/**
+	 * @return boolean - If the server supports SSL
+	 */
+	public boolean getIsSSLserver(){
+		return isSSLserver;
+	}
+
+	/**
+	 * @param isSSLserver - True if the server supports SSL, false otherwise
+	 */
+	public void setIsSSLserver( boolean isSSLserver ){
+		this.isSSLserver = isSSLserver;
+	}
+
+	/**
+	 * @return String - The channel to use
+	 */
+	public String getChannel(){
+		return channel;
+	}
+
+	/**
+	 * @param channel - The channel to use
+	 */
+	public void setChannel( String channel ){
+		this.channel = channel;
+	}
+
+	/**
+	 * @return String - The pseudo to use on the channel
+	 */
+	public String getNickname(){
+		return nickname;
+	}
+
+	/**
+	 * @return String - The real name
+	 */
+	public String getRealName(){
+		return realName;
+	}
+	
+	/**
+	 * @param realName - The real name
+	 */
+	public void setRealName( String realName ){
+		this.realName = realName;
+	}
+	
+	/**
+	 * @return String - The ident
+	 */
+	public String getIdent(){
+		return ident;
+	}
+	
+	/**
+	 * @param ident - The ident
+	 */
+	public void setIdent( String ident ){
+		this.ident = ident;
+	}
+	
+	/**
+	 * @param nickname - The pseudo name
+	 */
+	public void setNickname( String nickname ){
+		this.nickname = nickname;
+	}
+	
+	/**
+	 * @return String - The 1st alternative nickname
+	 */
+	public String getAlternativeNickname1(){
+		return alternativeNickname1;
+	}
+
+	/**
+	 * @param alternativeNickname1 - The 1st alternative nickname
+	 */
+	public void setAlternativeNickname1( String alternativeNickname1 ){
+		this.alternativeNickname1 = alternativeNickname1;
+	}
+
+	/**
+	 * @return String - The 2nd alternative nickname
+	 */
+	public String getAlternativeNickname2(){
+		return alternativeNickname2;
+	}
+
+	/**
+	 * @param alternativeNickname2 - The 2nd alternative nickname
+	 */
+	public void setAlternativeNickname2( String alternativeNickname2 ){
+		this.alternativeNickname2 = alternativeNickname2;
+	}
+
+	/**
+	 * @return String - The 3rd alternative nickname
+	 */
+	public String getAlternativeNickname3(){
+		return alternativeNickname3;
+	}
+
+	/**
+	 * @param alternativeNickname3 - The 3rd alternative nickname
+	 */
+	public void setAlternativeNickname3( String alternativeNickname3 ){
+		this.alternativeNickname3 = alternativeNickname3;
+	}
+
+	/**
+	 * @return String - The message to send
+	 */
+	public String getMessage(){
+		return message;
+	}
+
+	/**
+	 * @param message - The message to send
+	 */
+	public void setMessage( String message ){
+		this.message = message;
+	}
+	
+}

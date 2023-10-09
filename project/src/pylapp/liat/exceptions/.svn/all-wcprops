@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/!svn/ver/3/trunk/src/pylapp/liat/exceptions
+END
+BadInitializationException.java
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/!svn/ver/3/trunk/src/pylapp/liat/exceptions/BadInitializationException.java
+END
+package-info.java
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svn/!svn/ver/3/trunk/src/pylapp/liat/exceptions/package-info.java
+END

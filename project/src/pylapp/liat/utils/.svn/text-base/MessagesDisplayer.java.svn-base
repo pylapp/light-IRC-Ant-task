@@ -1,0 +1,73 @@
+package pylapp.liat.utils;
+
+/*
+ * Copyright © (C) 2013, Pierre-Yves Lapersonne
+ *
+ * Contact: Pierre-Yves Lapersonne <pierreyveslapersonne(at)gmail(dot)com>
+ *	 
+ * This file is part of LIAT (Little Irc Ant Task) Project
+ *
+ * LIAT is free software: you can redistribute it and/or modify it under the terms of 
+ * the GNU General Public License as published by the Free Software Foundation, either version 3 
+ * of the License, or (at your option) any later version.
+ *	
+ * LIAT is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  
+ * See the GNU General Public License for more details.
+ *	
+ * You should have received a copy of the GNU General Public License along 
+ * with this program; if not, write to the Free Software Foundation, Inc., 
+ * 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
+
+import java.io.PrintStream;
+
+/**
+ * Tool class used so as to display texts on specified outputs.
+ * 
+ * @author Pylapp
+ * @version 1.0.0
+ * @since 07/06/2013
+ */
+public class MessagesDisplayer {
+
+	
+	// CONSTANTS
+	
+	/**
+	 * The default output stream
+	 */
+	private static final PrintStream OUT;
+	
+	/**
+	 * The error output stream
+	 */
+	private static final PrintStream ERR;
+	
+	static {
+		OUT = System.out;
+		ERR = System.err;
+	}
+	
+	
+	// METHODS
+	
+	/**
+	 * Displays in the default output the text
+	 * 
+	 * @param text - The message to write
+	 */
+	public static void displayOut( String text ){
+		OUT.print(text);
+	}
+
+	/**
+	 * Displays in the error output the text
+	 * 
+	 * @param text - The message to write
+	 */
+	public static void displayErr( String text ){
+		ERR.print(text);
+	}
+	
+}

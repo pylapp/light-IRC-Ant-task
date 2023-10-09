@@ -1,0 +1,19 @@
+==================
+Apache 2.0 License
+==================
+
+Component: org.apache.tools.ant 
+Copyright: Apache Software Foundation (ASF)
+Source Code: https://github.com/apache/ant/tree/master/src/main/org/apache/tools
+
+Component: irc-api
+Copyright: Copyright (c) Miguel Haber (miguel@lebane.se)
+Source Code: https://github.com/migzai/irc-api
+
+==========================
+Eclipse Public License 1.0
+==========================
+
+Component: Junit 4.4
+Copyright: JUnit
+Source Code: https://github.com/junit-team/junit4
